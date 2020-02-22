@@ -2,7 +2,6 @@ package main
 
 import (
 	"errors"
-	"fmt"
 	"os"
 	"strings"
 
@@ -22,7 +21,7 @@ func main() {
 			for _, dir := range args {
 				parts := strings.Split(dir, ":")
 				if len(parts) != 2 {
-					return errors.New("wrong format for dir " + dir + ". Expeced: \"local:remote\"")
+					return errors.New("wrong format for dir " + dir + ". Expected: \"local:remote\"")
 				}
 			}
 			return nil
@@ -39,7 +38,6 @@ func main() {
 
 	err := cmd.Execute()
 	if err != nil {
-		fmt.Printf("Error: %v", err)
 		os.Exit(1)
 	}
 }
