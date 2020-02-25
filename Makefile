@@ -12,4 +12,4 @@ release: image
 	docker push $(REGISTRY)$(IMAGE_NAME)
 
 test-e2e:
-	go test ./e2e/
+	go test -timeout 30m -v ./e2e
