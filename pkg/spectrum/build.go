@@ -24,7 +24,7 @@ func Build(options Options, dirs ...string) error {
 		return errors.Wrapf(err, "could not pull base image image %s", options.Base)
 	}
 
-	newImage := base
+	tarFiles := make([]string, 0)
 	for _, spec := range dirs {
 		parts := strings.Split(spec, ":")
 		if len(parts) != 2 {
@@ -34,10 +34,12 @@ func Build(options Options, dirs ...string) error {
 		if err != nil {
 			return errors.Wrapf(err, "cannot package dir %s as tar file", parts[0])
 		}
-		newImage, err = crane.Append(base, tarFile)
-		if err != nil {
-			return errors.Wrap(err, "could not append tar layer to base image")
-		}
+		defer os.Remove(tarFile)
+		tarFiles = append(tarFiles, tarFile)
+	}
+	newImage, err := crane.Append(base, tarFiles...)
+	if err != nil {
+		return errors.Wrap(err, "could not append tar layers to base image")
 	}
 
 	var pushOpts []crane.Option
