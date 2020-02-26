@@ -20,7 +20,7 @@ func TestDockerHubPush(t *testing.T) {
 	configDir := createRegistryConfigDir(t, "https://index.docker.io/v1/", user, pass)
 	target := fmt.Sprintf("%s/spectrum-push", user)
 
-	Expect(spectrum("-b", "adoptopenjdk/openjdk8:slim",
+	Expect(spectrum("build", "-b", "adoptopenjdk/openjdk8:slim",
 		"-t", target,
 		"--push-config-dir", configDir,
 		"./files/01-simple:/app")).To(BeNil())
