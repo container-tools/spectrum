@@ -31,4 +31,5 @@ dockers:
   - spectrum
   image_templates:
   - 'quay.io/container-tools/spectrum:{{ .Tag }}'
+  - 'quay.io/container-tools/spectrum:v{{ .Major }}.{{ .Minor }}'
   - 'quay.io/container-tools/spectrum:latest'
