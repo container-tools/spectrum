@@ -31,9 +31,11 @@ func Spectrum() *cobra.Command {
 	}
 
 	cmd.Flags().StringVarP(&options.Base, "base", "b", "", "Base container image to use")
-	cmd.Flags().BoolVarP(&options.BaseInsecure, "base-insecure", "", false, "If the base image is hosted in an insecure registry")
 	cmd.Flags().StringVarP(&options.Target, "target", "t", "", "Target container image to use")
-	cmd.Flags().BoolVarP(&options.TargetInsecure, "target-insecure", "", false, "If the target image will be pushed to an insecure registry")
+	cmd.Flags().BoolVarP(&options.PullInsecure, "pull-insecure", "", false, "If the base image is hosted in an insecure registry")
+	cmd.Flags().BoolVarP(&options.PushInsecure, "push-insecure", "", false, "If the target image will be pushed to an insecure registry")
+	cmd.Flags().StringVarP(&options.PullConfigDir, "pull-config-dir", "", "", "A directory containing the docker config.json file that will be used for pulling the base image, in case authentication is required")
+	cmd.Flags().StringVarP(&options.PushConfigDir, "push-config-dir", "", "", "A directory containing the docker config.json file that will be used for pushing the target image, in case authentication is required")
 
 	return &cmd
 }

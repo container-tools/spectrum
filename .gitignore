@@ -6,3 +6,5 @@
 /.metadata
 
 *.iml
+
+.envrc

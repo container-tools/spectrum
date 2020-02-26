@@ -14,12 +14,7 @@ import (
 )
 
 func Build(options Options, dirs ...string) error {
-	var pullOpts []crane.Option
-	if options.BaseInsecure {
-		pullOpts = append(pullOpts, crane.Insecure)
-	}
-
-	base, err := crane.Pull(options.Base, pullOpts...)
+	base, err := Pull(options)
 	if err != nil {
 		return errors.Wrapf(err, "could not pull base image image %s", options.Base)
 	}
@@ -42,11 +37,7 @@ func Build(options Options, dirs ...string) error {
 		return errors.Wrap(err, "could not append tar layers to base image")
 	}
 
-	var pushOpts []crane.Option
-	if options.TargetInsecure {
-		pushOpts = append(pushOpts, crane.Insecure)
-	}
-	return crane.Push(newImage, options.Target, pushOpts...)
+	return Push(newImage, options)
 }
 
 func tarPackage(dirName, targetPath string) (file string, err error) {

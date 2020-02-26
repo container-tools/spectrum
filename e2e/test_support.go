@@ -2,18 +2,25 @@ package e2e
 
 import (
 	"archive/tar"
+	"encoding/base64"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
+	"text/template"
 
 	"github.com/container-tools/spectrum/pkg/cmd"
 	"github.com/google/go-containerregistry/pkg/crane"
 	"github.com/opencontainers/go-digest"
 	"gotest.tools/assert"
 )
+
+func isRegistryInsecure() bool {
+	return getRegistryInsecure() == "true"
+}
 
 func getRegistryInsecure() string {
 	ins := os.Getenv("SPECTRUM_REGISTRY_INSECURE")
@@ -37,13 +44,13 @@ func spectrum(args ...string) error {
 	return spectrum.Execute()
 }
 
-func assertDataMatch(t *testing.T, image, dir, expected string) {
+func assertDataMatch(t *testing.T, image string, insecure bool, dir, expected string) {
 	options := []crane.Option(nil)
-	if getRegistryInsecure() == "true" {
+	if insecure {
 		options = append(options, crane.Insecure)
 	}
 
-	img, err := crane.Pull(getRegistry()+"/"+image, options...)
+	img, err := crane.Pull(image, options...)
 	if err != nil {
 		panic(err)
 	}
@@ -118,4 +125,41 @@ func assertDataMatch(t *testing.T, image, dir, expected string) {
 	}
 
 	assert.DeepEqual(t, expectedMap, contentMap)
+}
+
+func createRegistryConfigDir(t *testing.T, registry, user, pass string) string {
+	var params = struct {
+		Token    string
+		Registry string
+	}{
+		Token:    base64.StdEncoding.EncodeToString([]byte(fmt.Sprintf("%s:%s", user, pass))),
+		Registry: registry,
+	}
+	templateFile, err := ioutil.ReadFile("./files/.docker/config.json.tmpl")
+	if err != nil {
+		t.Error(err)
+		t.FailNow()
+	}
+	tmpl, err := template.New(".dockerconfigjson").Parse(string(templateFile))
+	if err != nil {
+		t.Error(err)
+		t.FailNow()
+	}
+
+	tmpDir, err := ioutil.TempDir("", "spectrum-docker-config-")
+	if err != nil {
+		t.Error(err)
+		t.FailNow()
+	}
+	configFile, err := os.Create(filepath.Join(tmpDir, "config.json"))
+	if err != nil {
+		t.Error(err)
+		t.FailNow()
+	}
+	defer configFile.Close()
+	if err := tmpl.Execute(configFile, params); err != nil {
+		t.Error(err)
+		t.FailNow()
+	}
+	return tmpDir
 }

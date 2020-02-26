@@ -1,8 +1,10 @@
 package spectrum
 
 type Options struct {
-	BaseInsecure   bool
-	TargetInsecure bool
-	Base           string
-	Target         string
+	PullInsecure  bool
+	PushInsecure  bool
+	PullConfigDir string
+	PushConfigDir string
+	Base          string
+	Target        string
 }
