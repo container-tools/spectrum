@@ -55,3 +55,7 @@ jobs:
 
         echo "Starting e2e tests"
         make test-e2e
+    - name: Tag Release
+      uses: mathieudutour/github-tag-action@v4
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}
