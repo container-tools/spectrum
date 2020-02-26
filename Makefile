@@ -1,3 +1,5 @@
+# Spectrum Makefile
+
 build:
 	go build ./cmd/spectrum/
 
