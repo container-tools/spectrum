@@ -1,4 +1,4 @@
-package spectrum
+package builder
 
 type Options struct {
 	PullInsecure  bool

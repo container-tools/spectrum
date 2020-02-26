@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/container-tools/spectrum/pkg/spectrum"
+	"github.com/container-tools/spectrum/pkg/builder"
 	"github.com/container-tools/spectrum/pkg/util"
 	"github.com/spf13/cobra"
 )
@@ -13,10 +13,10 @@ import (
 func Spectrum() *cobra.Command {
 	cmd := cobra.Command{
 		Use:   "spectrum",
-		Short: "Spectrum can publish simple container images in a few of seconds",
+		Short: "Spectrum can publish simple container images in a few seconds",
 	}
 
-	options := spectrum.Options{}
+	options := builder.Options{}
 	build := cobra.Command{
 		Use:   "build",
 		Short: "Build an image and publish it",
@@ -33,7 +33,7 @@ func Spectrum() *cobra.Command {
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return spectrum.Build(options, args...)
+			return builder.Build(options, args...)
 		},
 	}
 	build.Flags().StringVarP(&options.Base, "base", "b", "", "Base container image to use")
