@@ -33,7 +33,12 @@ func Spectrum() *cobra.Command {
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			return builder.Build(options, args...)
+			digest, err := builder.Build(options, args...)
+			if err != nil {
+				return err
+			}
+			fmt.Fprintln(cmd.OutOrStdout(), digest)
+			return nil
 		},
 	}
 	build.Flags().StringVarP(&options.Base, "base", "b", "", "Base container image to use")

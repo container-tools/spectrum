@@ -10,34 +10,43 @@ import (
 	"strings"
 
 	"github.com/google/go-containerregistry/pkg/crane"
+	v1 "github.com/google/go-containerregistry/pkg/v1"
 	"github.com/pkg/errors"
 )
 
-func Build(options Options, dirs ...string) error {
+// Build executes the full build cycle and returns the image digest
+func Build(options Options, dirs ...string) (string, error) {
 	base, err := Pull(options)
 	if err != nil {
-		return errors.Wrapf(err, "could not pull base image image %s", options.Base)
+		return "", errors.Wrapf(err, "could not pull base image image %s", options.Base)
 	}
 
 	tarFiles := make([]string, 0)
 	for _, spec := range dirs {
 		parts := strings.Split(spec, ":")
 		if len(parts) != 2 {
-			return errors.New("wrong dir format for " + spec + " (expected \"local:remote\")")
+			return "", errors.New("wrong dir format for " + spec + " (expected \"local:remote\")")
 		}
 		tarFile, err := tarPackage(parts[0], parts[1])
 		if err != nil {
-			return errors.Wrapf(err, "cannot package dir %s as tar file", parts[0])
+			return "", errors.Wrapf(err, "cannot package dir %s as tar file", parts[0])
 		}
 		defer os.Remove(tarFile)
 		tarFiles = append(tarFiles, tarFile)
 	}
 	newImage, err := crane.Append(base, tarFiles...)
 	if err != nil {
-		return errors.Wrap(err, "could not append tar layers to base image")
+		return "", errors.Wrap(err, "could not append tar layers to base image")
 	}
 
-	return Push(newImage, options)
+	if err := Push(newImage, options); err != nil {
+		return "", err
+	}
+	var hash v1.Hash
+	if hash, err = newImage.Digest(); err != nil {
+		return "", err
+	}
+	return hash.String(), nil
 }
 
 func tarPackage(dirName, targetPath string) (file string, err error) {
