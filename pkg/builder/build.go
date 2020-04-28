@@ -2,8 +2,10 @@ package builder
 
 import (
 	"archive/tar"
+	"github.com/google/go-containerregistry/pkg/logs"
 	"io"
 	"io/ioutil"
+	"log"
 	"os"
 	"path"
 	"path/filepath"
@@ -14,13 +16,20 @@ import (
 	"github.com/pkg/errors"
 )
 
+const LogPrefix = "spectrum - "
+
+var StepLogger = log.New(ioutil.Discard, LogPrefix, log.LstdFlags)
+
 // Build executes the full build cycle and returns the image digest
 func Build(options Options, dirs ...string) (string, error) {
+	configureLogging(options)
+	StepLogger.Printf("Pulling base image %s (insecure=%v)...", options.Base, options.PullInsecure)
 	base, err := Pull(options)
 	if err != nil {
 		return "", errors.Wrapf(err, "could not pull base image image %s", options.Base)
 	}
 
+	StepLogger.Println("Composing layers...")
 	tarFiles := make([]string, 0)
 	for _, spec := range dirs {
 		parts := strings.Split(spec, ":")
@@ -39,6 +48,7 @@ func Build(options Options, dirs ...string) (string, error) {
 		return "", errors.Wrap(err, "could not append tar layers to base image")
 	}
 
+	StepLogger.Printf("Pushing image %s (insecure=%v)...", options.Target, options.PushInsecure)
 	if err := Push(newImage, options); err != nil {
 		return "", err
 	}
@@ -47,6 +57,21 @@ func Build(options Options, dirs ...string) (string, error) {
 		return "", err
 	}
 	return hash.String(), nil
+}
+
+func configureLogging(options Options) {
+	stdout := options.Stdout
+	if stdout == nil {
+		stdout = ioutil.Discard
+	}
+	logs.Progress = log.New(stdout, LogPrefix, log.LstdFlags)
+	StepLogger = log.New(stdout, LogPrefix, log.LstdFlags)
+
+	stderr := options.Stderr
+	if stderr == nil {
+		stderr = ioutil.Discard
+	}
+	logs.Warn = log.New(stderr, LogPrefix, log.LstdFlags)
 }
 
 func tarPackage(dirName, targetPath string) (file string, err error) {

@@ -12,3 +12,6 @@ require (
 	github.com/stretchr/testify v1.4.0
 	gotest.tools v2.2.0+incompatible
 )
+
+// Using a fork that removes the https ping before using http in caseof insecure registry
+replace github.com/google/go-containerregistry => github.com/nicolaferraro/go-containerregistry v0.0.0-20200428072705-e7aced86aca8

@@ -10,13 +10,19 @@ import (
 	"github.com/spf13/cobra"
 )
 
+type CommandOptions struct {
+	builder.Options
+
+	quiet bool
+}
+
 func Spectrum() *cobra.Command {
 	cmd := cobra.Command{
 		Use:   "spectrum",
 		Short: "Spectrum can publish simple container images in a few seconds",
 	}
 
-	options := builder.Options{}
+	options := CommandOptions{}
 	build := cobra.Command{
 		Use:   "build",
 		Short: "Build an image and publish it",
@@ -30,10 +36,17 @@ func Spectrum() *cobra.Command {
 					return errors.New("wrong format for dir " + dir + ". Expected: \"local:remote\"")
 				}
 			}
+
+			// Configure output
+			if !options.quiet {
+				options.Stdout = cmd.OutOrStdout()
+				options.Stderr = cmd.ErrOrStderr()
+			}
+
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
-			digest, err := builder.Build(options, args...)
+			digest, err := builder.Build(options.Options, args...)
 			if err != nil {
 				return err
 			}
@@ -47,6 +60,7 @@ func Spectrum() *cobra.Command {
 	build.Flags().BoolVarP(&options.PushInsecure, "push-insecure", "", false, "If the target image will be pushed to an insecure registry")
 	build.Flags().StringVarP(&options.PullConfigDir, "pull-config-dir", "", "", "A directory containing the docker config.json file that will be used for pulling the base image, in case authentication is required")
 	build.Flags().StringVarP(&options.PushConfigDir, "push-config-dir", "", "", "A directory containing the docker config.json file that will be used for pushing the target image, in case authentication is required")
+	build.Flags().BoolVarP(&options.quiet, "quiet", "q", false, "Do not print logs to stdout and stderr")
 	cmd.AddCommand(&build)
 
 	version := cobra.Command{

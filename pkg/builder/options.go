@@ -1,5 +1,7 @@
 package builder
 
+import "io"
+
 type Options struct {
 	PullInsecure  bool
 	PushInsecure  bool
@@ -7,4 +9,6 @@ type Options struct {
 	PushConfigDir string
 	Base          string
 	Target        string
+	Stdout        io.Writer
+	Stderr        io.Writer
 }
