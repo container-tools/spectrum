@@ -44,6 +44,30 @@ func spectrum(args ...string) error {
 	return spectrum.Execute()
 }
 
+func getImageAnnotations(image string, insecure bool) map[string]string {
+	options := []crane.Option(nil)
+	if insecure {
+		options = append(options, crane.Insecure)
+	}
+
+	img, err := crane.Pull(image, options...)
+	if err != nil {
+		panic(err)
+	}
+
+	manifest, err := img.Manifest()
+	if err != nil {
+		panic(err)
+	}
+	annotations := make(map[string]string)
+	for _, layer := range manifest.Layers {
+		for k, v := range layer.Annotations {
+			annotations[k] = v
+		}
+	}
+	return annotations
+}
+
 func assertDataMatch(t *testing.T, image string, insecure bool, dir, expected string) {
 	options := []crane.Option(nil)
 	if insecure {

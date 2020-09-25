@@ -2,7 +2,10 @@ package builder
 
 import (
 	"archive/tar"
+	"fmt"
 	"github.com/google/go-containerregistry/pkg/logs"
+	"github.com/google/go-containerregistry/pkg/v1/mutate"
+	"github.com/google/go-containerregistry/pkg/v1/tarball"
 	"io"
 	"io/ioutil"
 	"log"
@@ -11,7 +14,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/google/go-containerregistry/pkg/crane"
 	v1 "github.com/google/go-containerregistry/pkg/v1"
 	"github.com/pkg/errors"
 )
@@ -43,7 +45,7 @@ func Build(options Options, dirs ...string) (string, error) {
 		defer os.Remove(tarFile)
 		tarFiles = append(tarFiles, tarFile)
 	}
-	newImage, err := crane.Append(base, tarFiles...)
+	newImage, err := appendPaths(base, options.Annotations, tarFiles...)
 	if err != nil {
 		return "", errors.Wrap(err, "could not append tar layers to base image")
 	}
@@ -124,4 +126,23 @@ func tarPackage(dirName, targetPath string) (file string, err error) {
 	}
 
 	return layerFile.Name(), nil
+}
+
+func appendPaths(base v1.Image, annotations map[string]string, paths ...string) (v1.Image, error) {
+	additions := make([]mutate.Addendum, 0, len(paths))
+	for idx, path := range paths {
+		layer, err := tarball.LayerFromFile(path)
+		if err != nil {
+			return nil, fmt.Errorf("reading tar %q: %v", path, err)
+		}
+		addendum := mutate.Addendum{
+			Layer: layer,
+		}
+		if len(annotations) > 0 && idx == len(paths)-1 {
+			addendum.Annotations = annotations
+		}
+		additions = append(additions, addendum)
+	}
+
+	return mutate.Append(base, additions...)
 }
