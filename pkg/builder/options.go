@@ -9,6 +9,7 @@ type Options struct {
 	PushConfigDir string
 	Base          string
 	Target        string
+	Annotations   map[string]string
 	Stdout        io.Writer
 	Stderr        io.Writer
 }

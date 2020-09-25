@@ -1,6 +1,7 @@
 package e2e
 
 import (
+	"github.com/stretchr/testify/assert"
 	"testing"
 
 	. "github.com/onsi/gomega"
@@ -16,6 +17,34 @@ func TestSimplePublish(t *testing.T) {
 		"./files/01-simple:/app")).To(BeNil())
 
 	assertDataMatch(t, target, isRegistryInsecure(), "/app", "./files/01-simple")
+}
+
+func TestAnnotations(t *testing.T) {
+	RegisterTestingT(t)
+
+	target := getRegistry() + "/publish/annotated"
+	Expect(spectrum("build", "-b", "adoptopenjdk/openjdk8:slim",
+		"-t", target,
+		"-a", "mykey=myval",
+		"--push-insecure="+getRegistryInsecure(),
+		"./files/01-simple:/app")).To(BeNil())
+
+	annotations := getImageAnnotations(target, isRegistryInsecure())
+	assert.Equal(t, "myval", annotations["mykey"])
+}
+
+func TestAnnotationsMultipleLayers(t *testing.T) {
+	RegisterTestingT(t)
+
+	target := getRegistry() + "/publish/annotated"
+	Expect(spectrum("build", "-b", "adoptopenjdk/openjdk8:slim",
+		"-t", target,
+		"-a", "mykey=myval",
+		"--push-insecure="+getRegistryInsecure(),
+		"./files/01-simple:/app", "./files/02-override:/app")).To(BeNil())
+
+	annotations := getImageAnnotations(target, isRegistryInsecure())
+	assert.Equal(t, "myval", annotations["mykey"])
 }
 
 func TestDirectOverride(t *testing.T) {

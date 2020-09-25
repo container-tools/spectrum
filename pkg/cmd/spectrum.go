@@ -13,7 +13,8 @@ import (
 type CommandOptions struct {
 	builder.Options
 
-	quiet bool
+	annotationList []string
+	quiet          bool
 }
 
 func Spectrum() *cobra.Command {
@@ -43,6 +44,17 @@ func Spectrum() *cobra.Command {
 				options.Stderr = cmd.ErrOrStderr()
 			}
 
+			for _, akv := range options.annotationList {
+				if options.Annotations == nil {
+					options.Annotations = make(map[string]string)
+				}
+				parts := strings.SplitN(akv, "=", 2)
+				if len(parts) != 2 {
+					return fmt.Errorf(`wrong format for the annotation: expected "key=value", got %q`, akv)
+				}
+				options.Annotations[parts[0]] = parts[1]
+			}
+
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -60,6 +72,7 @@ func Spectrum() *cobra.Command {
 	build.Flags().BoolVarP(&options.PushInsecure, "push-insecure", "", false, "If the target image will be pushed to an insecure registry")
 	build.Flags().StringVarP(&options.PullConfigDir, "pull-config-dir", "", "", "A directory containing the docker config.json file that will be used for pulling the base image, in case authentication is required")
 	build.Flags().StringVarP(&options.PushConfigDir, "push-config-dir", "", "", "A directory containing the docker config.json file that will be used for pushing the target image, in case authentication is required")
+	build.Flags().StringSliceVarP(&options.annotationList, "annotations", "a", nil, "A list of annotations in the key=value format to add to the final image")
 	build.Flags().BoolVarP(&options.quiet, "quiet", "q", false, "Do not print logs to stdout and stderr")
 	cmd.AddCommand(&build)
 
