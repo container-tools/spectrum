@@ -12,4 +12,5 @@ type Options struct {
 	Annotations   map[string]string
 	Stdout        io.Writer
 	Stderr        io.Writer
+	Recursive     bool
 }

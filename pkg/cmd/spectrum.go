@@ -74,6 +74,7 @@ func Spectrum() *cobra.Command {
 	build.Flags().StringVarP(&options.PushConfigDir, "push-config-dir", "", "", "A directory containing the docker config.json file that will be used for pushing the target image, in case authentication is required")
 	build.Flags().StringSliceVarP(&options.annotationList, "annotations", "a", nil, "A list of annotations in the key=value format to add to the final image")
 	build.Flags().BoolVarP(&options.quiet, "quiet", "q", false, "Do not print logs to stdout and stderr")
+	build.Flags().BoolVarP(&options.Recursive, "recursive", "r", false, "Copy content from the source filesystem directory recursively")
 	cmd.AddCommand(&build)
 
 	version := cobra.Command{
