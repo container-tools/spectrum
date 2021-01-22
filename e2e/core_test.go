@@ -77,3 +77,16 @@ func TestLayerComposition(t *testing.T) {
 
 	assertDataMatch(t, target2, isRegistryInsecure(), "/app", "./files/03-merge")
 }
+
+func TestRecursive(t *testing.T) {
+	RegisterTestingT(t)
+
+	target := getRegistry() + "/publish/simple"
+	Expect(spectrum("build", "-b", "adoptopenjdk/openjdk8:slim",
+		"-t", target,
+		"--push-insecure="+getRegistryInsecure(),
+		"-r",
+		"./files/04-recursive:/app")).To(BeNil())
+
+	assertDataMatch(t, target, isRegistryInsecure(), "/app", "./files/04-recursive")
+}

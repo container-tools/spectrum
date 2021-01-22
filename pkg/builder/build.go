@@ -38,7 +38,7 @@ func Build(options Options, dirs ...string) (string, error) {
 		if len(parts) != 2 {
 			return "", errors.New("wrong dir format for " + spec + " (expected \"local:remote\")")
 		}
-		tarFile, err := tarPackage(parts[0], parts[1])
+		tarFile, err := tarPackage(parts[0], parts[1], options.Recursive)
 		if err != nil {
 			return "", errors.Wrapf(err, "cannot package dir %s as tar file", parts[0])
 		}
@@ -76,7 +76,7 @@ func configureLogging(options Options) {
 	logs.Warn = log.New(stderr, LogPrefix, log.LstdFlags)
 }
 
-func tarPackage(dirName, targetPath string) (file string, err error) {
+func tarPackage(dirName, targetPath string, recursive bool) (file string, err error) {
 	layerFile, err := ioutil.TempFile("", "spectrum-layer-*.tar")
 	if err != nil {
 		return "", err
@@ -85,14 +85,30 @@ func tarPackage(dirName, targetPath string) (file string, err error) {
 
 	writer := tar.NewWriter(layerFile)
 
+	if recursive {
+		err = tarPackageRecursive(dirName, targetPath, writer)
+		if err != nil {
+			return "", err
+		}
+	} else {
+		err = tarPackageNonRecursive(dirName, targetPath, writer)
+		if err != nil {
+			return "", err
+		}
+	}
+
+	return layerFile.Name(), nil
+}
+
+func tarPackageNonRecursive(dirName, targetPath string, writer *tar.Writer) error {
 	dir, err := os.Open(dirName)
 	if err != nil {
-		return "", err
+		return err
 	}
 
 	files, err := dir.Readdir(0)
 	if err != nil {
-		return "", err
+		return err
 	}
 
 	for _, fileInfo := range files {
@@ -103,7 +119,7 @@ func tarPackage(dirName, targetPath string) (file string, err error) {
 
 		file, err := os.Open(dir.Name() + string(filepath.Separator) + fileInfo.Name())
 		if err != nil {
-			return "", err
+			return err
 		}
 		defer file.Close()
 
@@ -116,16 +132,50 @@ func tarPackage(dirName, targetPath string) (file string, err error) {
 
 		err = writer.WriteHeader(header)
 		if err != nil {
-			return "", err
+			return err
 		}
 
 		_, err = io.Copy(writer, file)
 		if err != nil {
-			return "", err
+			return err
 		}
 	}
+	return nil
+}
 
-	return layerFile.Name(), nil
+func tarPackageRecursive(dirName, targetPath string, writer *tar.Writer) error {
+	filepath.Walk(dirName, func(filePath string, fileInfo os.FileInfo, err error) error {
+		if !fileInfo.IsDir() {
+			fileRelPath := strings.Replace(filePath, path.Clean(dirName), "", 1)
+
+			// prepare the tar header
+			header := new(tar.Header)
+			header.Name = path.Join(targetPath, fileRelPath)
+			header.Size = fileInfo.Size()
+			header.Mode = int64(fileInfo.Mode())
+			header.ModTime = fileInfo.ModTime()
+
+			err = writer.WriteHeader(header)
+			if err != nil {
+				return err
+			}
+
+			file, err := os.Open(filePath)
+			if err != nil {
+				return err
+			}
+			defer file.Close()
+
+			_, err = io.Copy(writer, file)
+			if err != nil {
+				return err
+			}
+		}
+
+		return nil
+	})
+
+	return nil
 }
 
 func appendPaths(base v1.Image, annotations map[string]string, paths ...string) (v1.Image, error) {
