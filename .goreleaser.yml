@@ -7,6 +7,7 @@ builds:
   - CGO_ENABLED=0
   main: ./cmd/spectrum/main.go
   ldflags: -X github.com/container-tools/spectrum/pkg/util.Version={{ .Tag }}
+  id: spectrum
 archives:
 - replacements:
     darwin: Darwin
@@ -27,7 +28,7 @@ changelog:
 dockers:
 - goos: linux
   goarch: amd64
-  binaries:
+  ids:
   - spectrum
   image_templates:
   - 'quay.io/container-tools/spectrum:{{ .Tag }}'
