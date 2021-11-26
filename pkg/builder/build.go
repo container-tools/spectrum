@@ -7,6 +7,7 @@ import (
 	"github.com/google/go-containerregistry/pkg/v1/mutate"
 	"github.com/google/go-containerregistry/pkg/v1/tarball"
 	"io"
+	"io/fs"
 	"io/ioutil"
 	"log"
 	"os"
@@ -76,7 +77,7 @@ func configureLogging(options Options) {
 	logs.Warn = log.New(stderr, LogPrefix, log.LstdFlags)
 }
 
-func tarPackage(dirName, targetPath string, recursive bool) (file string, err error) {
+func tarPackage(name, targetPath string, recursive bool) (file string, err error) {
 	layerFile, err := ioutil.TempFile("", "spectrum-layer-*.tar")
 	if err != nil {
 		return "", err
@@ -85,15 +86,23 @@ func tarPackage(dirName, targetPath string, recursive bool) (file string, err er
 
 	writer := tar.NewWriter(layerFile)
 	defer writer.Close()
+	fileInfo, err := os.Stat(name)
+	if err != nil {
+		return "", err
+	}
 
-
-	if recursive {
-		err = tarPackageRecursive(dirName, targetPath, writer)
+	if !fileInfo.IsDir() {
+		err := writeFileToTar(name, targetPath, writer, fileInfo)
+		if err != nil {
+			return "", err
+		}
+	} else if recursive {
+		err = tarPackageRecursive(name, targetPath, writer)
 		if err != nil {
 			return "", err
 		}
 	} else {
-		err = tarPackageNonRecursive(dirName, targetPath, writer)
+		err = tarPackageNonRecursive(name, targetPath, writer)
 		if err != nil {
 			return "", err
 		}
@@ -119,28 +128,36 @@ func tarPackageNonRecursive(dirName, targetPath string, writer *tar.Writer) erro
 			continue
 		}
 
-		file, err := os.Open(dir.Name() + string(filepath.Separator) + fileInfo.Name())
+		err := writeFileToTar(dir.Name()+string(filepath.Separator)+fileInfo.Name(), targetPath, writer, fileInfo)
 		if err != nil {
 			return err
 		}
-		defer file.Close()
+	}
+	return nil
+}
 
-		// prepare the tar header
-		header := new(tar.Header)
-		header.Name = path.Join(targetPath, filepath.Base(file.Name()))
-		header.Size = fileInfo.Size()
-		header.Mode = int64(fileInfo.Mode())
-		header.ModTime = fileInfo.ModTime()
+func writeFileToTar(name, targetPath string, writer *tar.Writer, fileInfo fs.FileInfo) error {
+	file, err := os.Open(name)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
 
-		err = writer.WriteHeader(header)
-		if err != nil {
-			return err
-		}
+	// prepare the tar header
+	header := new(tar.Header)
+	header.Name = path.Join(targetPath, filepath.Base(file.Name()))
+	header.Size = fileInfo.Size()
+	header.Mode = int64(fileInfo.Mode())
+	header.ModTime = fileInfo.ModTime()
 
-		_, err = io.Copy(writer, file)
-		if err != nil {
-			return err
-		}
+	err = writer.WriteHeader(header)
+	if err != nil {
+		return err
+	}
+
+	_, err = io.Copy(writer, file)
+	if err != nil {
+		return err
 	}
 	return nil
 }
