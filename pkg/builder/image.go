@@ -6,10 +6,14 @@ import (
 	"github.com/google/go-containerregistry/pkg/authn"
 	"github.com/google/go-containerregistry/pkg/name"
 	v1 "github.com/google/go-containerregistry/pkg/v1"
+	"github.com/google/go-containerregistry/pkg/v1/empty"
 	"github.com/google/go-containerregistry/pkg/v1/remote"
 )
 
 func Pull(options Options) (v1.Image, error) {
+	if options.Base == "" || options.Base == "scratch" {
+		return empty.Image, nil
+	}
 	nameOptions := makeNameOptions(options.PullInsecure)
 	ref, err := name.ParseReference(options.Base, nameOptions...)
 	if err != nil {
