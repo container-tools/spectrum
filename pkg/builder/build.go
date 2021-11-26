@@ -84,6 +84,8 @@ func tarPackage(dirName, targetPath string, recursive bool) (file string, err er
 	defer layerFile.Close()
 
 	writer := tar.NewWriter(layerFile)
+	defer writer.Close()
+
 
 	if recursive {
 		err = tarPackageRecursive(dirName, targetPath, writer)
