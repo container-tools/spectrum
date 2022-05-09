@@ -10,6 +10,7 @@ import (
 	"os"
 	"path"
 	"path/filepath"
+	"runtime"
 	"strings"
 
 	"github.com/google/go-containerregistry/pkg/logs"
@@ -36,13 +37,14 @@ func Build(options Options, dirs ...string) (string, error) {
 	StepLogger.Println("Composing layers...")
 	tarFiles := make([]string, 0)
 	for _, spec := range dirs {
-		parts := strings.Split(spec, ":")
-		if len(parts) != 2 {
-			return "", errors.New("wrong dir format for " + spec + " (expected \"local:remote\")")
-		}
-		tarFile, err := tarPackage(parts[0], parts[1], options.Recursive)
+		localPath, targetPath, err := getPaths(spec, runtime.GOOS)
 		if err != nil {
-			return "", errors.Wrapf(err, "cannot package dir %s as tar file", parts[0])
+			return "", err
+		}
+
+		tarFile, err := tarPackage(localPath, targetPath, options.Recursive)
+		if err != nil {
+			return "", errors.Wrapf(err, "cannot package dir %s as tar file", localPath)
 		}
 		defer os.Remove(tarFile)
 		tarFiles = append(tarFiles, tarFile)
@@ -62,6 +64,20 @@ func Build(options Options, dirs ...string) (string, error) {
 		return "", err
 	}
 	return hash.String(), nil
+}
+
+func getPaths(paths string, os string) (localPath string, targetPath string, err error) {
+	parts := strings.Split(paths, ":")
+	if len(parts) != 2 && (len(parts) == 3 && os != "windows") {
+		return "", "", errors.New("wrong dir format for " + paths + " (expected \"local:remote\")")
+	}
+	localPath = parts[0]
+	targetPath = parts[1]
+	if os == "windows" && len(parts) == 3 {
+		localPath = fmt.Sprintf("%s:%s", parts[0], parts[1])
+		targetPath = parts[2]
+	}
+	return localPath, targetPath, nil
 }
 
 func configureLogging(options Options) {
