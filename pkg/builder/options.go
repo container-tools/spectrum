@@ -13,4 +13,5 @@ type Options struct {
 	Stdout        io.Writer
 	Stderr        io.Writer
 	Recursive     bool
+	jobs          int
 }
