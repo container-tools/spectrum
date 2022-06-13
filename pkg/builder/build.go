@@ -3,9 +3,6 @@ package builder
 import (
 	"archive/tar"
 	"fmt"
-	"github.com/google/go-containerregistry/pkg/logs"
-	"github.com/google/go-containerregistry/pkg/v1/mutate"
-	"github.com/google/go-containerregistry/pkg/v1/tarball"
 	"io"
 	"io/fs"
 	"io/ioutil"
@@ -14,6 +11,10 @@ import (
 	"path"
 	"path/filepath"
 	"strings"
+
+	"github.com/google/go-containerregistry/pkg/logs"
+	"github.com/google/go-containerregistry/pkg/v1/mutate"
+	"github.com/google/go-containerregistry/pkg/v1/tarball"
 
 	v1 "github.com/google/go-containerregistry/pkg/v1"
 	"github.com/pkg/errors"
@@ -52,6 +53,7 @@ func Build(options Options, dirs ...string) (string, error) {
 	}
 
 	StepLogger.Printf("Pushing image %s (insecure=%v)...", options.Target, options.PushInsecure)
+
 	if err := Push(newImage, options); err != nil {
 		return "", err
 	}
