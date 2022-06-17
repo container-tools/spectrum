@@ -43,8 +43,8 @@ func makeNameOptions(insecure bool) (nameOptions []name.Option) {
 }
 
 func makeRemoteOptions(options Options, configDir string) (remoteOptions []remote.Option) {
-	if options.jobs > 0 {
-		remoteOptions = append(remoteOptions, remote.WithJobs(options.jobs))
+	if options.Jobs > 0 {
+		remoteOptions = append(remoteOptions, remote.WithJobs(options.Jobs))
 	}
 	if configDir != "" {
 		keyChain := NewDirKeyChain(configDir)
