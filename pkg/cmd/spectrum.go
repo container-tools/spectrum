@@ -66,6 +66,7 @@ func Spectrum() *cobra.Command {
 			return nil
 		},
 	}
+
 	build.Flags().StringVarP(&options.Base, "base", "b", "", "Base container image to use")
 	build.Flags().StringVarP(&options.Target, "target", "t", "", "Target container image to use")
 	build.Flags().BoolVarP(&options.PullInsecure, "pull-insecure", "", false, "If the base image is hosted in an insecure registry")
@@ -75,6 +76,7 @@ func Spectrum() *cobra.Command {
 	build.Flags().StringSliceVarP(&options.annotationList, "annotations", "a", nil, "A list of annotations in the key=value format to add to the final image")
 	build.Flags().BoolVarP(&options.quiet, "quiet", "q", false, "Do not print logs to stdout and stderr")
 	build.Flags().BoolVarP(&options.Recursive, "recursive", "r", false, "Copy content from the source filesystem directory recursively")
+	build.Flags().BoolVar(&options.ClearEntrypoint, "clear-entrypoint", false, "Clear any entrypoint defined")
 	cmd.AddCommand(&build)
 
 	version := cobra.Command{

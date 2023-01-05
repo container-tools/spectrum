@@ -44,6 +44,24 @@ func spectrum(args ...string) error {
 	return spectrum.Execute()
 }
 
+func getImageEntrypoint(image string, insecure bool) []string {
+	options := []crane.Option(nil)
+	if insecure {
+		options = append(options, crane.Insecure)
+	}
+
+	img, err := crane.Pull(image, options...)
+	if err != nil {
+		panic(err)
+	}
+
+	configFile, err := img.ConfigFile()
+	if err != nil {
+		panic(err)
+	}
+	return configFile.Config.Entrypoint
+}
+
 func getImageAnnotations(image string, insecure bool) map[string]string {
 	options := []crane.Option(nil)
 	if insecure {

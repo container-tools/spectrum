@@ -54,6 +54,25 @@ func Build(options Options, dirs ...string) (string, error) {
 		return "", errors.Wrap(err, "could not append tar layers to base image")
 	}
 
+	if err != nil {
+		panic(err)
+	}
+
+	if options.ClearEntrypoint == true {
+		StepLogger.Println("Clearing entrypoint...")
+		// Change the entry point
+		confFile, err := newImage.ConfigFile()
+		if err != nil {
+			panic(err)
+		}
+		confFile.Config.Entrypoint = nil
+
+		newImage, err = mutate.Config(newImage, confFile.Config)
+		if err != nil {
+			panic(err)
+		}
+	}
+
 	StepLogger.Printf("Pushing image %s (insecure=%v)...", options.Target, options.PushInsecure)
 
 	if err := Push(newImage, options); err != nil {
