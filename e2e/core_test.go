@@ -1,8 +1,9 @@
 package e2e
 
 import (
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 
 	. "github.com/onsi/gomega"
 )
@@ -89,4 +90,18 @@ func TestRecursive(t *testing.T) {
 		"./files/04-recursive:/app")).To(BeNil())
 
 	assertDataMatch(t, target, isRegistryInsecure(), "/app", "./files/04-recursive")
+}
+
+func TestEntryPoint(t *testing.T) {
+	RegisterTestingT(t)
+
+	target := getRegistry() + "/publish/simple"
+	Expect(spectrum("build", "-b", "curlimages/curl:latest",
+		"-t", target,
+		"--push-insecure="+getRegistryInsecure(),
+		"--clear-entrypoint",
+		"./files/01-simple:/app")).To(BeNil())
+
+	entrypoint := getImageEntrypoint(target, isRegistryInsecure())
+	assert.Nil(t, entrypoint)
 }
