@@ -102,6 +102,23 @@ func TestEntryPoint(t *testing.T) {
 		"--clear-entrypoint",
 		"./files/01-simple:/app")).To(BeNil())
 
-	entrypoint := getImageEntrypoint(target, isRegistryInsecure())
+	entrypoint, err := getImageEntrypoint(target, isRegistryInsecure())
+	assert.Nil(t, err)
 	assert.Nil(t, entrypoint)
+}
+
+func TestUser(t *testing.T) {
+	RegisterTestingT(t)
+
+	target := getRegistry() + "/publish/simple"
+	Expect(spectrum("build", "-b", "adoptopenjdk/openjdk8:slim",
+		"-t", target,
+		"--push-insecure="+getRegistryInsecure(),
+		"--run-as",
+		"1000",
+		"./files/01-simple:/app")).To(BeNil())
+
+	user, err := getImageUser(target, isRegistryInsecure())
+	assert.Nil(t, err)
+	assert.Equal(t, "1000", user)
 }

@@ -77,6 +77,7 @@ func Spectrum() *cobra.Command {
 	build.Flags().BoolVarP(&options.quiet, "quiet", "q", false, "Do not print logs to stdout and stderr")
 	build.Flags().BoolVarP(&options.Recursive, "recursive", "r", false, "Copy content from the source filesystem directory recursively")
 	build.Flags().BoolVar(&options.ClearEntrypoint, "clear-entrypoint", false, "Clear any entrypoint defined")
+	build.Flags().StringVar(&options.RunAs, "run-as", "", "User id/name used to run the container image")
 	cmd.AddCommand(&build)
 
 	version := cobra.Command{

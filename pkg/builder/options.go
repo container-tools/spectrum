@@ -15,4 +15,5 @@ type Options struct {
 	Recursive       bool
 	Jobs            int
 	ClearEntrypoint bool
+	RunAs           string
 }
