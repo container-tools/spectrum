@@ -53,7 +53,7 @@ func Build(options Options, dirs ...string) (string, error) {
 	if err != nil {
 		return "", errors.Wrap(err, "could not append tar layers to base image")
 	}
-
+	confFile, err := newImage.ConfigFile()
 	if err != nil {
 		panic(err)
 	}
@@ -61,12 +61,17 @@ func Build(options Options, dirs ...string) (string, error) {
 	if options.ClearEntrypoint == true {
 		StepLogger.Println("Clearing entrypoint...")
 		// Change the entry point
-		confFile, err := newImage.ConfigFile()
+		confFile.Config.Entrypoint = nil
+		newImage, err = mutate.Config(newImage, confFile.Config)
 		if err != nil {
 			panic(err)
 		}
-		confFile.Config.Entrypoint = nil
+	}
 
+	if options.RunAs != "" {
+		StepLogger.Printf("Setting user as %s", options.RunAs)
+		// Change the configured USER
+		confFile.Config.User = options.RunAs
 		newImage, err = mutate.Config(newImage, confFile.Config)
 		if err != nil {
 			panic(err)

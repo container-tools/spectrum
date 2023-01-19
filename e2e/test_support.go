@@ -14,6 +14,7 @@ import (
 
 	"github.com/container-tools/spectrum/pkg/cmd"
 	"github.com/google/go-containerregistry/pkg/crane"
+	v1 "github.com/google/go-containerregistry/pkg/v1"
 	"github.com/opencontainers/go-digest"
 	"gotest.tools/assert"
 )
@@ -44,7 +45,23 @@ func spectrum(args ...string) error {
 	return spectrum.Execute()
 }
 
-func getImageEntrypoint(image string, insecure bool) []string {
+func getImageEntrypoint(image string, insecure bool) ([]string, error) {
+	configFile, err := getImageConfigFile(image, insecure)
+	if err != nil {
+		return nil, err
+	}
+	return configFile.Config.Entrypoint, err
+}
+
+func getImageUser(image string, insecure bool) (string, error) {
+	configFile, err := getImageConfigFile(image, insecure)
+	if err != nil {
+		return "", err
+	}
+	return configFile.Config.User, err
+}
+
+func getImageConfigFile(image string, insecure bool) (v1.ConfigFile, error) {
 	options := []crane.Option(nil)
 	if insecure {
 		options = append(options, crane.Insecure)
@@ -52,14 +69,14 @@ func getImageEntrypoint(image string, insecure bool) []string {
 
 	img, err := crane.Pull(image, options...)
 	if err != nil {
-		panic(err)
+		return v1.ConfigFile{}, err
 	}
 
 	configFile, err := img.ConfigFile()
 	if err != nil {
-		panic(err)
+		return v1.ConfigFile{}, err
 	}
-	return configFile.Config.Entrypoint
+	return *configFile, nil
 }
 
 func getImageAnnotations(image string, insecure bool) map[string]string {
