@@ -3,13 +3,13 @@ module github.com/container-tools/spectrum
 go 1.16
 
 require (
-	github.com/docker/cli v20.10.11+incompatible
-	github.com/google/go-containerregistry v0.0.0-20200220215334-221517453cf9
-	github.com/onsi/gomega v1.10.3
+	github.com/docker/cli v23.0.1+incompatible
+	github.com/google/go-containerregistry v0.13.0
+	github.com/onsi/gomega v1.27.1
 	github.com/opencontainers/go-digest v1.0.0
 	github.com/pkg/errors v0.9.1
-	github.com/spf13/cobra v1.2.1
-	github.com/stretchr/testify v1.7.0
+	github.com/spf13/cobra v1.6.1
+	github.com/stretchr/testify v1.8.1
 	gotest.tools v2.2.0+incompatible
 )
 
