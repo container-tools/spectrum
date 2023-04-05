@@ -3,7 +3,7 @@ module github.com/container-tools/spectrum
 go 1.18
 
 require (
-	github.com/docker/cli v23.0.2+incompatible
+	github.com/docker/cli v23.0.3+incompatible
 	github.com/google/go-containerregistry v0.13.0
 	github.com/onsi/gomega v1.27.6
 	github.com/opencontainers/go-digest v1.0.0
