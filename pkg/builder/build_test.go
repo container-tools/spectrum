@@ -1,7 +1,11 @@
 package builder
 
 import (
+	"archive/tar"
 	"fmt"
+	"os"
+	"strings"
+	"syscall"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -39,4 +43,110 @@ func TestPaths(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, linuxPath, localPath)
 	assert.Equal(t, ".", targetPath)
+}
+
+func TestTarSingleEntry(t *testing.T) {
+	var tmpFile1 *os.File
+	var err error
+	if tmpFile1, err = os.CreateTemp("", "camel-k-*.txt"); err != nil {
+		t.Error(err)
+	}
+
+	assert.Nil(t, tmpFile1.Close())
+	assert.Nil(t, os.WriteFile(tmpFile1.Name(), []byte(`
+	This is for simple testing
+	`), 0o400))
+
+	tarFileName, err := tarPackage(tmpFile1.Name(), "/path/to/target", false)
+	assert.NoError(t, err)
+	r, err := os.Open(tarFileName)
+	assert.NoError(t, err)
+	tr := tar.NewReader(r)
+	assert.NotNil(t, tr)
+	header, err := tr.Next()
+	assert.NotNil(t, tr)
+	assert.True(t, strings.HasPrefix(header.Name, "/path/to/target/camel-k-"))
+	assert.True(t, strings.HasSuffix(header.Name, ".txt"))
+	// Assuming you're testing with a non-root user!
+	assert.NotEqual(t, 0, header.Uid)
+	assert.NotEqual(t, 0, header.Gid)
+}
+
+func TestTarPermissionsSingleEntry(t *testing.T) {
+	var tmpFile1 *os.File
+	var err error
+	if tmpFile1, err = os.CreateTemp("", "camel-k-*.txt"); err != nil {
+		t.Error(err)
+	}
+
+	assert.Nil(t, tmpFile1.Close())
+	assert.Nil(t, os.WriteFile(tmpFile1.Name(), []byte(`
+	This is for simple testing
+	`), 0o400))
+
+	tarFileName, err := tarPackage(tmpFile1.Name(), "/path/to/target", false)
+	assert.NoError(t, err)
+	r, err := os.Open(tarFileName)
+	assert.NoError(t, err)
+	tr := tar.NewReader(r)
+	assert.NotNil(t, tr)
+	header, err := tr.Next()
+	assert.NotNil(t, tr)
+	assert.True(t, strings.HasPrefix(header.Name, "/path/to/target/camel-k-"))
+	assert.True(t, strings.HasSuffix(header.Name, ".txt"))
+	assert.Equal(t, syscall.Getuid(), header.Uid)
+	assert.Equal(t, syscall.Getgid(), header.Gid)
+}
+
+func TestTarDir(t *testing.T) {
+	var tmpDir string
+	var tmpFile1 *os.File
+	var err error
+	if tmpDir, err = os.MkdirTemp("", "camel-k-*"); err != nil {
+		t.Error(err)
+	}
+	if tmpFile1, err = os.CreateTemp(tmpDir, "camel-k-*.txt"); err != nil {
+		t.Error(err)
+	}
+
+	assert.Nil(t, tmpFile1.Close())
+	assert.Nil(t, os.WriteFile(tmpFile1.Name(), []byte(`
+	This is for simple testing
+	`), 0o400))
+
+	tarFileName, err := tarPackage(tmpDir, "/path/to/target", false)
+	assert.NoError(t, err)
+	r, err := os.Open(tarFileName)
+	assert.NoError(t, err)
+	tr := tar.NewReader(r)
+	assert.NotNil(t, tr)
+	header, err := tr.Next()
+	assert.NotNil(t, tr)
+	assert.True(t, strings.HasPrefix(header.Name, "/path/to/target/camel-k-"))
+	assert.True(t, strings.HasSuffix(header.Name, ".txt"))
+}
+
+func TestTarDirRecursive(t *testing.T) {
+	tmpDir1, err := os.MkdirTemp("", "camel-k-*")
+	assert.NoError(t, err)
+	tmpDir2, err := os.MkdirTemp(tmpDir1, "camel-k-*")
+	assert.NoError(t, err)
+	tmpFile1, err := os.CreateTemp(tmpDir2, "camel-k-*.txt")
+	assert.NoError(t, err)
+
+	assert.Nil(t, tmpFile1.Close())
+	assert.Nil(t, os.WriteFile(tmpFile1.Name(), []byte(`
+	This is for simple testing
+	`), 0o400))
+
+	tarFileName, err := tarPackage(tmpDir1, "/path/to/target", true)
+	assert.NoError(t, err)
+	r, err := os.Open(tarFileName)
+	assert.NoError(t, err)
+	tr := tar.NewReader(r)
+	assert.NotNil(t, tr)
+	header, err := tr.Next()
+	assert.NotNil(t, tr)
+	assert.True(t, strings.HasPrefix(header.Name, "/path/to/target/camel-k-"))
+	assert.True(t, strings.HasSuffix(header.Name, ".txt"))
 }
