@@ -12,6 +12,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"syscall"
 
 	"github.com/google/go-containerregistry/pkg/logs"
 	"github.com/google/go-containerregistry/pkg/v1/mutate"
@@ -185,12 +186,11 @@ func writeFileToTar(name, targetPath string, writer *tar.Writer, fileInfo fs.Fil
 	}
 	defer file.Close()
 
-	// prepare the tar header
-	header := new(tar.Header)
-	header.Name = path.Join(targetPath, filepath.Base(file.Name()))
-	header.Size = fileInfo.Size()
-	header.Mode = int64(fileInfo.Mode())
-	header.ModTime = fileInfo.ModTime()
+	header := prepareHeader(
+		targetPath,
+		path.Join(targetPath, filepath.Base(file.Name())),
+		fileInfo,
+	)
 
 	err = writer.WriteHeader(header)
 	if err != nil {
@@ -204,17 +204,35 @@ func writeFileToTar(name, targetPath string, writer *tar.Writer, fileInfo fs.Fil
 	return nil
 }
 
+func prepareHeader(tp, name string, fi fs.FileInfo) *tar.Header {
+	// prepare the tar header
+	header := new(tar.Header)
+	header.Name = name
+	header.Size = fi.Size()
+	header.Mode = int64(fi.Mode())
+	// Non portable way of retrieving uid/gid, but Golang does not offer any other way programmatically
+	fileSys := fi.Sys()
+	if fileSys != nil {
+		header.Uid = int(fileSys.(*syscall.Stat_t).Uid)
+		header.Gid = int(fileSys.(*syscall.Stat_t).Gid)
+	} else {
+		StepLogger.Printf("Warning: could not read UID/GID. Assuming default (root) permissions.")
+	}
+	header.ModTime = fi.ModTime()
+
+	return header
+}
+
 func tarPackageRecursive(dirName, targetPath string, writer *tar.Writer) error {
 	filepath.Walk(dirName, func(filePath string, fileInfo os.FileInfo, err error) error {
 		if !fileInfo.IsDir() {
 			fileRelPath := strings.Replace(filePath, path.Clean(dirName), "", 1)
 
-			// prepare the tar header
-			header := new(tar.Header)
-			header.Name = path.Join(targetPath, fileRelPath)
-			header.Size = fileInfo.Size()
-			header.Mode = int64(fileInfo.Mode())
-			header.ModTime = fileInfo.ModTime()
+			header := prepareHeader(
+				targetPath,
+				path.Join(targetPath, fileRelPath),
+				fileInfo,
+			)
 
 			err = writer.WriteHeader(header)
 			if err != nil {
