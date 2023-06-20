@@ -17,7 +17,7 @@ func TestSimplePublish(t *testing.T) {
 		"--push-insecure="+getRegistryInsecure(),
 		"./files/01-simple:/app")).To(BeNil())
 
-	assertDataMatch(t, target, isRegistryInsecure(), "/app", "./files/01-simple")
+	assertDataMatch(t, target, isRegistryInsecure(), "/app", "./files/01-simple", false)
 }
 
 func TestAnnotations(t *testing.T) {
@@ -57,7 +57,7 @@ func TestDirectOverride(t *testing.T) {
 		"--push-insecure="+getRegistryInsecure(),
 		"./files/01-simple:/app", "./files/02-override:/app")).To(BeNil())
 
-	assertDataMatch(t, target, isRegistryInsecure(), "/app", "./files/03-merge")
+	assertDataMatch(t, target, isRegistryInsecure(), "/app", "./files/03-merge", false)
 }
 
 func TestLayerComposition(t *testing.T) {
@@ -76,7 +76,7 @@ func TestLayerComposition(t *testing.T) {
 		"--push-insecure="+getRegistryInsecure(),
 		"./files/02-override:/app")).To(BeNil())
 
-	assertDataMatch(t, target2, isRegistryInsecure(), "/app", "./files/03-merge")
+	assertDataMatch(t, target2, isRegistryInsecure(), "/app", "./files/03-merge", false)
 }
 
 func TestRecursive(t *testing.T) {
@@ -89,7 +89,7 @@ func TestRecursive(t *testing.T) {
 		"-r",
 		"./files/04-recursive:/app")).To(BeNil())
 
-	assertDataMatch(t, target, isRegistryInsecure(), "/app", "./files/04-recursive")
+	assertDataMatch(t, target, isRegistryInsecure(), "/app", "./files/04-recursive", true)
 }
 
 func TestEntryPoint(t *testing.T) {

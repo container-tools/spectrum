@@ -103,7 +103,7 @@ func getImageAnnotations(image string, insecure bool) map[string]string {
 	return annotations
 }
 
-func assertDataMatch(t *testing.T, image string, insecure bool, dir, expected string) {
+func assertDataMatch(t *testing.T, image string, insecure bool, dir, expected string, recursive bool) {
 	options := []crane.Option(nil)
 	if insecure {
 		options = append(options, crane.Insecure)
@@ -159,28 +159,33 @@ func assertDataMatch(t *testing.T, image string, insecure bool, dir, expected st
 	if err != nil {
 		panic(err)
 	}
-	err = filepath.Walk(absExpected, func(path string, info os.FileInfo, err error) error {
-		if err != nil {
-			panic(err)
-		}
-		if info.IsDir() {
+	if recursive {
+		// Calculated manually. If the content of ./e2e/files/04-recursive changes, we need to change this as well
+		expectedMap[""] = "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+	} else {
+		err = filepath.Walk(absExpected, func(path string, info os.FileInfo, err error) error {
+			if err != nil {
+				panic(err)
+			}
+			if info.IsDir() {
+				return nil
+			}
+			name := path[len(absExpected):]
+			file, err := os.Open(path)
+			if err != nil {
+				panic(err)
+			}
+			defer file.Close()
+			hash, err := digest.FromReader(file)
+			if err != nil {
+				panic(err)
+			}
+			expectedMap[name] = hash.String()
 			return nil
-		}
-		name := path[len(absExpected):]
-		file, err := os.Open(path)
+		})
 		if err != nil {
 			panic(err)
 		}
-		defer file.Close()
-		hash, err := digest.FromReader(file)
-		if err != nil {
-			panic(err)
-		}
-		expectedMap[name] = hash.String()
-		return nil
-	})
-	if err != nil {
-		panic(err)
 	}
 
 	assert.DeepEqual(t, expectedMap, contentMap)
