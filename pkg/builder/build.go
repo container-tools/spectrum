@@ -197,10 +197,13 @@ func writeFileToTar(name, targetPath string, writer *tar.Writer, fileInfo fs.Fil
 		return err
 	}
 
-	_, err = io.Copy(writer, file)
-	if err != nil {
-		return err
+	if !fileInfo.IsDir() {
+		_, err = io.Copy(writer, file)
+		if err != nil {
+			return err
+		}
 	}
+
 	return nil
 }
 
@@ -224,21 +227,24 @@ func prepareHeader(tp, name string, fi fs.FileInfo) *tar.Header {
 }
 
 func tarPackageRecursive(dirName, targetPath string, writer *tar.Writer) error {
+
 	filepath.Walk(dirName, func(filePath string, fileInfo os.FileInfo, err error) error {
+		fileRelPath := strings.Replace(filePath, path.Clean(dirName), "", 1)
+		header := prepareHeader(
+			targetPath,
+			path.Join(targetPath, fileRelPath),
+			fileInfo,
+		)
+		if fileInfo.IsDir() {
+			header.Name = header.Name + "/"
+		}
+
+		err = writer.WriteHeader(header)
+		if err != nil {
+			return err
+		}
+
 		if !fileInfo.IsDir() {
-			fileRelPath := strings.Replace(filePath, path.Clean(dirName), "", 1)
-
-			header := prepareHeader(
-				targetPath,
-				path.Join(targetPath, fileRelPath),
-				fileInfo,
-			)
-
-			err = writer.WriteHeader(header)
-			if err != nil {
-				return err
-			}
-
 			file, err := os.Open(filePath)
 			if err != nil {
 				return err
