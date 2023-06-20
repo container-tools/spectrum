@@ -212,7 +212,7 @@ func prepareHeader(tp, name string, fi fs.FileInfo) *tar.Header {
 	header := new(tar.Header)
 	header.Name = name
 	header.Size = fi.Size()
-	header.Mode = int64(fi.Mode())
+	header.Mode = int64(fi.Mode().Perm())
 	// Non portable way of retrieving uid/gid, but Golang does not offer any other way programmatically
 	fileSys := fi.Sys()
 	if fileSys != nil {

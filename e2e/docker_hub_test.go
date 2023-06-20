@@ -25,5 +25,5 @@ func TestDockerHubPush(t *testing.T) {
 		"--push-config-dir", configDir,
 		"./files/01-simple:/app")).To(BeNil())
 
-	assertDataMatch(t, target, false, "/app", "./files/01-simple")
+	assertDataMatch(t, target, false, "/app", "./files/01-simple", false)
 }
