@@ -35,6 +35,3 @@ require (
 	golang.org/x/text v0.9.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
-
-// Using a fork that removes the HTTPS ping before using HTTP for insecure registries
-replace github.com/google/go-containerregistry => github.com/container-tools/go-containerregistry v0.7.1-0.20211124090132-40ccc94a466b
