@@ -12,7 +12,6 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
-	"syscall"
 
 	"github.com/google/go-containerregistry/pkg/logs"
 	"github.com/google/go-containerregistry/pkg/v1/mutate"
@@ -205,25 +204,6 @@ func writeFileToTar(name, targetPath string, writer *tar.Writer, fileInfo fs.Fil
 	}
 
 	return nil
-}
-
-func prepareHeader(tp, name string, fi fs.FileInfo) *tar.Header {
-	// prepare the tar header
-	header := new(tar.Header)
-	header.Name = name
-	header.Size = fi.Size()
-	header.Mode = int64(fi.Mode().Perm())
-	// Non portable way of retrieving uid/gid, but Golang does not offer any other way programmatically
-	fileSys := fi.Sys()
-	if fileSys != nil {
-		header.Uid = int(fileSys.(*syscall.Stat_t).Uid)
-		header.Gid = int(fileSys.(*syscall.Stat_t).Gid)
-	} else {
-		StepLogger.Printf("Warning: could not read UID/GID. Assuming default (root) permissions.")
-	}
-	header.ModTime = fi.ModTime()
-
-	return header
 }
 
 func tarPackageRecursive(dirName, targetPath string, writer *tar.Writer) error {
