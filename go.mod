@@ -4,7 +4,7 @@ go 1.18
 
 require (
 	github.com/docker/cli v24.0.7+incompatible
-	github.com/google/go-containerregistry v0.17.0
+	github.com/google/go-containerregistry v0.18.0
 	github.com/onsi/gomega v1.30.0
 	github.com/opencontainers/go-digest v1.0.0
 	github.com/pkg/errors v0.9.1
