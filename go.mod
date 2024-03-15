@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	github.com/docker/cli v25.0.4+incompatible
-	github.com/google/go-containerregistry v0.19.0
+	github.com/google/go-containerregistry v0.19.1
 	github.com/onsi/gomega v1.31.1
 	github.com/opencontainers/go-digest v1.0.0
 	github.com/pkg/errors v0.9.1
