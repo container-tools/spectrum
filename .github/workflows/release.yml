@@ -15,7 +15,7 @@
 # limitations under the License.
 # ---------------------------------------------------------------------------
 
-name: build
+name: build and release on master
 
 on:
   pull_request:
@@ -24,7 +24,8 @@ on:
   push:
     branches:
       - master
-
+  workflow_dispatch:
+    
 jobs:
   test:
     runs-on: ubuntu-latest
