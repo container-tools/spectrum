@@ -1,4 +1,5 @@
 # Make sure to check the documentation at http://goreleaser.com
+version: 2
 before:
   hooks:
     - go mod download
@@ -9,12 +10,13 @@ builds:
   ldflags: -X github.com/container-tools/spectrum/pkg/util.Version={{ .Tag }}
   id: spectrum
 archives:
-- replacements:
-    darwin: Darwin
-    linux: Linux
-    windows: Windows
-    386: i386
-    amd64: x86_64
+- name_template: >-
+    {{- .ProjectName }}_
+    {{- .Version }}_
+    {{- title .Os }}_
+    {{- if eq .Arch "amd64" }}x86_64
+    {{- else if eq .Arch "386" }}i386
+    {{- else }}{{ .Arch }}{{ end }}
 checksum:
   name_template: 'checksums.txt'
 snapshot:
