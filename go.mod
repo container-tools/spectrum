@@ -1,6 +1,6 @@
 module github.com/container-tools/spectrum
 
-go 1.20
+go 1.21
 
 require (
 	github.com/docker/cli v27.0.3+incompatible
