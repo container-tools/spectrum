@@ -4,7 +4,7 @@ go 1.21
 
 require (
 	github.com/docker/cli v27.1.1+incompatible
-	github.com/google/go-containerregistry v0.20.1
+	github.com/google/go-containerregistry v0.20.2
 	github.com/onsi/gomega v1.34.1
 	github.com/opencontainers/go-digest v1.0.0
 	github.com/pkg/errors v0.9.1
