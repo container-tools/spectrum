@@ -1,3 +1,5 @@
+> NOTE: this project is deprecated and will be soon archived. Please, use any other tool like [go-containerregistry](https://github.com/google/go-containerregistry).
+
 # Spectrum
 
 Spectrum is a lightweight super-fast image builder tailored for application development use cases, where
