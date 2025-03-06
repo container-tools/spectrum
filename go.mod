@@ -1,6 +1,7 @@
 module github.com/container-tools/spectrum
 
 go 1.21
+toolchain go1.23.7
 
 require (
 	github.com/docker/cli v27.4.1+incompatible
@@ -10,7 +11,7 @@ require (
 	github.com/pkg/errors v0.9.1
 	github.com/spf13/cobra v1.8.1
 	github.com/stretchr/testify v1.10.0
-	golang.org/x/sys v0.28.0
+	golang.org/x/sys v0.31.0
 	gotest.tools v2.2.0+incompatible
 )
 
